@@ -8,6 +8,7 @@ from lxml.html.clean import Cleaner
 #import json
 #import codecs
 from peewee import *
+import datetime
 
 cleaner = Cleaner()
 cleaner.javascript = True
@@ -42,10 +43,15 @@ class DelfiPipeline(object):
 
     def process_item(self, item, spider):
         if item['description']:
-            item['description'] = cleaner.clean_html(lxml.html.fromstring(''.join(item['description']))).text_content() \
+            dom = lxml.html.fromstring(''.join(item['description']))  
+            #dom.remove()
+            item['description'] = cleaner.clean_html(dom).text_content() \
                 .replace('\n', '').replace('\r', '').replace('\t', '').strip()
 
-        Texts.create(title=item['title'][0], link=item['link'], date="2014-12-12", description=item['description'])
+	if item['date']:
+	    item['date'] = datetime.datetime.strptime(item['date'][0], "%Y m. %B %d d. %H:%M").strftime('%Y-%m-%d %H:%M')
+
+        Texts.create(title=item['title'][0], link=item['link'], date=item['date'][0], description=item['description'])
 
         # line = json.dumps(dict(item), ensure_ascii=False) + "\n"
         #self.file.write(line)
